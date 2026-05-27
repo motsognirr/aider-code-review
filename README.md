@@ -80,8 +80,7 @@ checkout, install, or test steps before invoking it.
 | `github_token` | yes | — | Needs `pull-requests: write`, `contents: read` |
 | `pr_number` | no | event payload | Override for `workflow_dispatch` |
 | `repo` | no | workflow repo | Override for cross-repo callers |
-| `model` | no | `deepseek/deepseek-reasoner` | aider architect model |
-| `editor_model` | no | `deepseek/deepseek-chat` | aider editor model |
+| `model` | no | `deepseek/deepseek-reasoner` | Model aider uses in ask mode |
 | `max_files` | no | `20` | Cap on fetched changed files |
 | `exclude_patterns` | no | sane defaults | Newline-separated globs |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
@@ -102,9 +101,10 @@ checkout, install, or test steps before invoking it.
 
 1. Sandboxed setup: install aider from PyPI; fetch the PR diff,
    metadata, and head file blobs via `gh api`.
-2. Run aider in `--architect` mode against the diff plus the head
+2. Run aider in `--chat-mode ask` against the diff plus the head
    versions of changed files (read-only), with a prompt asking for
-   structured JSON findings plus a `## Summary` section.
+   structured JSON findings plus a `## Summary` section. Ask mode
+   answers the prompt without trying to edit files.
 3. Parse the JSON. Drop any finding whose `path:line` isn't a `+`
    line in the PR diff (hallucination guard).
 4. Delete any previous bot comments tagged with the action's marker

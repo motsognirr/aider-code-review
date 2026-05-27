@@ -21,13 +21,9 @@ inputs:
     required: false
     default: ${{ github.repository }}
   model:
-    description: aider architect model.
+    description: Model aider uses in ask mode.
     required: false
     default: deepseek/deepseek-reasoner
-  editor_model:
-    description: aider editor model (used in --architect mode).
-    required: false
-    default: deepseek/deepseek-chat
   max_files:
     description: Maximum number of changed files to fetch for context.
     required: false
@@ -86,7 +82,6 @@ runs:
         REPO: ${{ inputs.repo }}
         PR_NUMBER: ${{ inputs.pr_number }}
         MODEL: ${{ inputs.model }}
-        EDITOR_MODEL: ${{ inputs.editor_model }}
         MAX_FILES: ${{ inputs.max_files }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
         FIRST_TIME_GATE_LABEL: ${{ inputs.first_time_contributor_gate_label }}
