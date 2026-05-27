@@ -1,0 +1,21 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v1.*"
+
+permissions:
+  contents: write
+
+jobs:
+  update-v1-alias:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Update moving v1 tag
+        run: |
+          git tag -f v1
+          git push origin v1 --force
