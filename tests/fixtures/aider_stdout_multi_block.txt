@@ -1,0 +1,11 @@
+Draft:
+
+```json
+[{"path": "old.py", "line": 1, "severity": "low", "category": "maintainability", "body": "draft"}]
+```
+
+Revised:
+
+```json
+[{"path": "src/bar.py", "line": 5, "severity": "high", "category": "security", "body": "SQL injection."}]
+```

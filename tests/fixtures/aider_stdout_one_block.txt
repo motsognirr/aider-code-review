@@ -1,0 +1,10 @@
+Reviewing the diff now.
+
+```json
+[
+  {"path": "src/foo.py", "line": 10, "severity": "high", "category": "bug", "body": "Off-by-one."}
+]
+```
+
+## Summary
+Looks fine overall.
