@@ -27,12 +27,18 @@ mkdir -p "$SANDBOX"
 echo "Sandbox: $SANDBOX"
 
 # --- Install aider (from PyPI, before any PR data lands on disk) ---
+# Use an isolated venv inside the sandbox so we (a) don't rely on a bare
+# `pip` being on PATH (brew's python@3.12 only ships pip3) and (b) avoid
+# PEP 668 "externally-managed-environment" errors when the runner's
+# Python is a brew install.
+VENV="$SANDBOX/venv"
+python3 -m venv "$VENV"
 if [ -n "$AIDER_VERSION" ]; then
-  pip install --user --quiet "aider-chat==$AIDER_VERSION"
+  "$VENV/bin/pip" install --quiet "aider-chat==$AIDER_VERSION"
 else
-  pip install --user --quiet "aider-chat"
+  "$VENV/bin/pip" install --quiet "aider-chat"
 fi
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$VENV/bin:$PATH"
 aider --version
 
 # --- Fetch PR context ---
