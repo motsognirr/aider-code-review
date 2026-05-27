@@ -11,7 +11,6 @@ set -euo pipefail
 : "${REPO:?REPO is required}"
 : "${PR_NUMBER:?PR_NUMBER is required}"
 : "${MODEL:=deepseek/deepseek-reasoner}"
-: "${EDITOR_MODEL:=deepseek/deepseek-chat}"
 : "${MAX_FILES:=20}"
 : "${EXCLUDE_PATTERNS:=}"
 : "${FIRST_TIME_GATE_LABEL:=}"
@@ -98,10 +97,12 @@ while IFS= read -r path; do
 done < "$SANDBOX/included_files.txt"
 
 set +e
+# Ask mode: aider only answers; no editor pass, no SEARCH/REPLACE edits.
+# Architect mode would feed our prompt to an editor model that tries to
+# turn the response into file edits, which mangles structured JSON output.
 DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY" aider \
-  --architect \
+  --chat-mode ask \
   --model "$MODEL" \
-  --editor-model "$EDITOR_MODEL" \
   --no-auto-commits --no-git --yes-always --no-stream \
   --no-show-model-warnings --no-check-update \
   "${read_args[@]}" \
