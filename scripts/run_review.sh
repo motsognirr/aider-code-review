@@ -31,9 +31,28 @@ echo "Sandbox: $SANDBOX"
 # `pip` being on PATH (brew's python@3.12 only ships pip3) and (b) avoid
 # PEP 668 "externally-managed-environment" errors when the runner's
 # Python is a brew install.
+#
+# aider-chat declares `requires_python = ">=3.10,<3.13"`, so we must
+# build the venv with a Python in that range. Probe known interpreters
+# in preference order and fall back to `python3` only if it qualifies.
+PYTHON=""
+for candidate in python3.12 python3.11 python3.10 python3; do
+  command -v "$candidate" >/dev/null 2>&1 || continue
+  pyver=$("$candidate" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null) || continue
+  case "$pyver" in
+    3.10|3.11|3.12) PYTHON="$candidate"; break ;;
+  esac
+done
+if [ -z "$PYTHON" ]; then
+  echo "::error::No compatible Python found. aider-chat requires >=3.10,<3.13;" \
+       "install python@3.12 (e.g. \`brew install python@3.12\`) on the runner." >&2
+  exit 2
+fi
+echo "Using $PYTHON ($("$PYTHON" --version)) for aider venv"
+
 VENV="$SANDBOX/venv"
-python3 -m venv "$VENV"
-# Python 3.14 venvs ship only pip; bootstrap setuptools+wheel so any sdist
+"$PYTHON" -m venv "$VENV"
+# Python 3.12+ venvs ship only pip; bootstrap setuptools+wheel so any sdist
 # that uses setuptools.build_meta as its PEP 517 backend builds. Prefer
 # binary wheels to skip sdist builds entirely when one is available.
 "$VENV/bin/pip" install --upgrade pip setuptools wheel
