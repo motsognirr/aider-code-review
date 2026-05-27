@@ -22,6 +22,7 @@ set -euo pipefail
 export GH_TOKEN
 
 SANDBOX="${RUNNER_TEMP:-/tmp}/aider-review-${GITHUB_RUN_ID:-local}"
+export SANDBOX
 rm -rf "$SANDBOX"
 mkdir -p "$SANDBOX"
 echo "Sandbox: $SANDBOX"
