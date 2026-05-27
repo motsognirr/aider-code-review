@@ -1,0 +1,9 @@
+diff --git a/src/old.py b/src/old.py
+index 0000005..0000006 100644
+--- a/src/old.py
++++ b/src/old.py
+@@ -5,4 +5,2 @@ def h():
+     keep1
+-    drop1
+-    drop2
+     keep2

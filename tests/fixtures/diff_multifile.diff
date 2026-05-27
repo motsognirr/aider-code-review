@@ -1,0 +1,17 @@
+diff --git a/src/foo.py b/src/foo.py
+index 0000001..0000002 100644
+--- a/src/foo.py
++++ b/src/foo.py
+@@ -1,3 +1,4 @@
+ import os
++import sys
+
+ def f():
+diff --git a/src/bar.py b/src/bar.py
+index 0000003..0000004 100644
+--- a/src/bar.py
++++ b/src/bar.py
+@@ -20,2 +20,3 @@ def g():
+     pass
++    return None
+

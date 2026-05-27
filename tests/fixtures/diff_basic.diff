@@ -1,0 +1,12 @@
+diff --git a/src/foo.py b/src/foo.py
+index 0000001..0000002 100644
+--- a/src/foo.py
++++ b/src/foo.py
+@@ -10,4 +10,6 @@ def f():
+     a = 1
+     b = 2
+-    c = a + b
++    c = a - b
++    d = c * 2
++    e = d + 1
+     return c
