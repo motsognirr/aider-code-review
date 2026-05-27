@@ -33,10 +33,15 @@ echo "Sandbox: $SANDBOX"
 # Python is a brew install.
 VENV="$SANDBOX/venv"
 python3 -m venv "$VENV"
+# Python 3.14 venvs ship only pip; bootstrap setuptools+wheel so any sdist
+# that uses setuptools.build_meta as its PEP 517 backend builds. Prefer
+# binary wheels to skip sdist builds entirely when one is available.
+"$VENV/bin/pip" install --upgrade pip setuptools wheel
+pip_args=( install --prefer-binary )
 if [ -n "$AIDER_VERSION" ]; then
-  "$VENV/bin/pip" install --quiet "aider-chat==$AIDER_VERSION"
+  "$VENV/bin/pip" "${pip_args[@]}" "aider-chat==$AIDER_VERSION"
 else
-  "$VENV/bin/pip" install --quiet "aider-chat"
+  "$VENV/bin/pip" "${pip_args[@]}" "aider-chat"
 fi
 export PATH="$VENV/bin:$PATH"
 aider --version
