@@ -103,6 +103,7 @@ set +e
 DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY" aider \
   --chat-mode ask \
   --model "$MODEL" \
+  --no-pretty \
   --no-auto-commits --no-git --yes-always --no-stream \
   --no-show-model-warnings --no-check-update \
   "${read_args[@]}" \
