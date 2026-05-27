@@ -1,0 +1,97 @@
+name: aider-code-review
+description: Agentic PR review using aider with DeepSeek as the backend model.
+author: motsognirr
+branding:
+  icon: eye
+  color: blue
+
+inputs:
+  deepseek_api_key:
+    description: DeepSeek API key (passed to aider as DEEPSEEK_API_KEY).
+    required: true
+  github_token:
+    description: "GitHub token with `pull-requests: write` and `contents: read`."
+    required: true
+  pr_number:
+    description: Pull request number. Defaults to the event payload.
+    required: false
+    default: ${{ github.event.pull_request.number }}
+  repo:
+    description: Repository in `owner/name` form. Defaults to the workflow repo.
+    required: false
+    default: ${{ github.repository }}
+  model:
+    description: aider architect model.
+    required: false
+    default: deepseek/deepseek-reasoner
+  editor_model:
+    description: aider editor model (used in --architect mode).
+    required: false
+    default: deepseek/deepseek-chat
+  max_files:
+    description: Maximum number of changed files to fetch for context.
+    required: false
+    default: "20"
+  exclude_patterns:
+    description: Newline-separated glob patterns to exclude from context.
+    required: false
+    default: |
+      **/*.lock
+      **/dist/**
+      **/node_modules/**
+      **/*.min.*
+      **/generated/**
+      **/*.svg
+      **/*.png
+      **/*.jpg
+  first_time_contributor_gate_label:
+    description: If set, gate review on this label for first-time contributors.
+    required: false
+    default: ""
+  aider_version:
+    description: aider-chat version to install (defaults to latest).
+    required: false
+    default: ""
+  dry_run:
+    description: If "true", print findings to job log instead of posting.
+    required: false
+    default: "false"
+
+outputs:
+  findings_count:
+    description: Number of surviving findings posted (or would-be in dry_run).
+    value: ${{ steps.review.outputs.findings_count }}
+  dropped_hallucinations_count:
+    description: Findings dropped by the hallucination guard.
+    value: ${{ steps.review.outputs.dropped_hallucinations_count }}
+  posted_inline_count:
+    description: Inline comments successfully posted.
+    value: ${{ steps.review.outputs.posted_inline_count }}
+  failed_posts_count:
+    description: Inline comments that failed to post.
+    value: ${{ steps.review.outputs.failed_posts_count }}
+  summary_comment_url:
+    description: URL of the posted summary comment.
+    value: ${{ steps.review.outputs.summary_comment_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run aider review
+      id: review
+      shell: bash
+      env:
+        DEEPSEEK_API_KEY: ${{ inputs.deepseek_api_key }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        REPO: ${{ inputs.repo }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        MODEL: ${{ inputs.model }}
+        EDITOR_MODEL: ${{ inputs.editor_model }}
+        MAX_FILES: ${{ inputs.max_files }}
+        EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
+        FIRST_TIME_GATE_LABEL: ${{ inputs.first_time_contributor_gate_label }}
+        AIDER_VERSION: ${{ inputs.aider_version }}
+        DRY_RUN: ${{ inputs.dry_run }}
+        ACTION_DIR: ${{ github.action_path }}
+      run: |
+        bash "${{ github.action_path }}/scripts/run_review.sh"
