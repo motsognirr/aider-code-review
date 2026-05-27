@@ -1,0 +1,8 @@
+```json
+[]
+```
+
+## Summary
+
+Two medium-severity findings, one perf issue in the hot path.
+Nothing blocking.
