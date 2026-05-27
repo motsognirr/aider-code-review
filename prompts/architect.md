@@ -3,6 +3,9 @@
 You are reviewing a pull request. Your output drives an automated reviewer
 that posts inline comments to GitHub, so you must produce structured output.
 
+**Write the review in English**, regardless of the language used in the
+code's identifiers, comments, commit messages, or PR description.
+
 ## What to look for
 
 - **Bugs**: logic errors, off-by-ones, null/undefined handling, incorrect
