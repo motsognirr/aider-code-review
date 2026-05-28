@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # aider-code-review orchestrator. Called by action.yml.
 # Required env vars (set by action.yml):
-#   DEEPSEEK_API_KEY, GH_TOKEN, REPO, PR_NUMBER,
-#   MODEL, EDITOR_MODEL, MAX_FILES, EXCLUDE_PATTERNS,
+#   GH_TOKEN, REPO, PR_NUMBER,
+#   MODEL, MAX_FILES, EXCLUDE_PATTERNS,
 #   FIRST_TIME_GATE_LABEL, AIDER_VERSION, DRY_RUN, ACTION_DIR
+# Provider key (exactly one, chosen by MODEL): DEEPSEEK_API_KEY | OPENAI_API_KEY
 set -euo pipefail
 
-: "${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
 : "${REPO:?REPO is required}"
 : "${PR_NUMBER:?PR_NUMBER is required}"
@@ -17,6 +17,25 @@ set -euo pipefail
 : "${AIDER_VERSION:=}"
 : "${DRY_RUN:=false}"
 : "${ACTION_DIR:?ACTION_DIR is required}"
+
+# --- Resolve which provider key the chosen model needs, and validate it ---
+KEY_VAR=$("$ACTION_DIR/scripts/resolve_provider.py" "$MODEL")
+case "$KEY_VAR" in
+  OPENAI_API_KEY) KEY_INPUT="openai_api_key" ;;
+  *)              KEY_INPUT="deepseek_api_key" ;;
+esac
+if [ -z "${!KEY_VAR:-}" ]; then
+  echo "::error::model '$MODEL' requires the '$KEY_INPUT' input (env $KEY_VAR) to be set." >&2
+  exit 2
+fi
+echo "Provider key for model '$MODEL': $KEY_VAR"
+
+# Drop the non-selected provider's key from the environment so only the
+# resolved key reaches the aider subprocess.
+case "$KEY_VAR" in
+  OPENAI_API_KEY)   unset DEEPSEEK_API_KEY ;;
+  DEEPSEEK_API_KEY) unset OPENAI_API_KEY ;;
+esac
 
 export GH_TOKEN
 
@@ -100,7 +119,7 @@ set +e
 # Ask mode: aider only answers; no editor pass, no SEARCH/REPLACE edits.
 # Architect mode would feed our prompt to an editor model that tries to
 # turn the response into file edits, which mangles structured JSON output.
-DEEPSEEK_API_KEY="$DEEPSEEK_API_KEY" aider \
+env "$KEY_VAR=${!KEY_VAR}" aider \
   --chat-mode ask \
   --model "$MODEL" \
   --no-pretty \
@@ -118,7 +137,7 @@ python3 - <<PY
 import os, re
 path = os.environ["SANDBOX"] + "/aider.stdout"
 text = open(path, encoding="utf-8", errors="replace").read()
-for var in ("DEEPSEEK_API_KEY", "GH_TOKEN"):
+for var in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "GH_TOKEN"):
     val = os.environ.get(var, "")
     if val:
         text = text.replace(val, "[REDACTED]")
