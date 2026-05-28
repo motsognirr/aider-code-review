@@ -1,5 +1,5 @@
 name: aider-code-review
-description: Agentic PR review using aider with DeepSeek as the backend model.
+description: Agentic PR review using aider. Supports DeepSeek (default) and OpenAI/ChatGPT backends.
 author: motsognirr
 branding:
   icon: eye

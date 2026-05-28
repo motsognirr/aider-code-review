@@ -13,7 +13,7 @@ import sys
 # Models that route to OpenAI. Matched case-insensitively against the model
 # name (the part after any leading "<provider>/"). The reasoning-model class is
 # [134] not [1-4] because OpenAI never released an "o2" family.
-_OPENAI_NAME = re.compile(r"^(gpt-|o[134])", re.IGNORECASE)
+_OPENAI_NAME = re.compile(r"^(gpt-|chatgpt-|o[134])", re.IGNORECASE)
 
 
 def resolve(model: str) -> str:

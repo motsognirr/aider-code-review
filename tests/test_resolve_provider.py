@@ -17,7 +17,7 @@ def run(model):
 
 @pytest.mark.parametrize(
     "model",
-    ["gpt-4o", "gpt-4.1", "gpt-4o-mini", "o1", "o3-mini", "o4-mini", "openai/gpt-4o"],
+    ["gpt-4o", "gpt-4.1", "gpt-4o-mini", "o1", "o3-mini", "o4-mini", "openai/gpt-4o", "chatgpt-4o-latest", "chatgpt-4o"],
 )
 def test_openai_models_route_to_openai_key(model):
     result = run(model)

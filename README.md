@@ -34,7 +34,7 @@ Set the `DEEPSEEK_API_KEY` secret in the consumer repo (or org).
 
 DeepSeek is the default backend. To review with an OpenAI model instead,
 supply `openai_api_key` and set `model` to an OpenAI model (`gpt-*`,
-`o1*`/`o3*`/`o4*`, or an explicit `openai/<name>`):
+`chatgpt-*`, `o1*`/`o3*`/`o4*`, or an explicit `openai/<name>`):
 
 ```yaml
       - uses: motsognirr/aider-code-review@v1
