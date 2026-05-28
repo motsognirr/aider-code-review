@@ -1,9 +1,10 @@
 # aider-code-review
 
 Reusable GitHub Action that performs agentic PR review using
-[aider](https://aider.chat) with DeepSeek as the backend model. Posts
-inline `path:line` comments and a top-level summary. Fork-safe: PRs from
-forks are reviewed without exposing secrets to PR-controlled code.
+[aider](https://aider.chat). DeepSeek is the default backend model, with
+OpenAI/ChatGPT available as an alternative. Posts inline `path:line`
+comments and a top-level summary. Fork-safe: PRs from forks are reviewed
+without exposing secrets to PR-controlled code.
 
 ## Quick start
 
@@ -28,6 +29,24 @@ jobs:
 ```
 
 Set the `DEEPSEEK_API_KEY` secret in the consumer repo (or org).
+
+## Using OpenAI/ChatGPT
+
+DeepSeek is the default backend. To review with an OpenAI model instead,
+supply `openai_api_key` and set `model` to an OpenAI model (`gpt-*`,
+`o1*`/`o3*`/`o4*`, or an explicit `openai/<name>`):
+
+```yaml
+      - uses: motsognirr/aider-code-review@v1
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: gpt-4o
+```
+
+Set the `OPENAI_API_KEY` secret in the consumer repo (or org). You only need
+the key that matches your chosen `model`; the action validates this at runtime
+and fails fast with a clear error if the matching key is missing.
 
 ## Runner prerequisites
 
@@ -76,11 +95,12 @@ checkout, install, or test steps before invoking it.
 
 | Input | Required | Default | Notes |
 |---|---|---|---|
-| `deepseek_api_key` | yes | — | Passed to aider as `DEEPSEEK_API_KEY` |
+| `deepseek_api_key` | for DeepSeek models | — | Passed to aider as `DEEPSEEK_API_KEY`. Required when `model` is a DeepSeek model (the default). |
+| `openai_api_key` | for OpenAI models | — | Passed to aider as `OPENAI_API_KEY`. Required when `model` is an OpenAI model (e.g. `gpt-4o`). |
 | `github_token` | yes | — | Needs `pull-requests: write`, `contents: read` |
 | `pr_number` | no | event payload | Override for `workflow_dispatch` |
 | `repo` | no | workflow repo | Override for cross-repo callers |
-| `model` | no | `deepseek/deepseek-reasoner` | Model aider uses in ask mode |
+| `model` | no | `deepseek/deepseek-reasoner` | Model aider uses in ask mode. OpenAI models route to `openai_api_key`; others to `deepseek_api_key`. |
 | `max_files` | no | `20` | Cap on fetched changed files |
 | `exclude_patterns` | no | sane defaults | Newline-separated globs |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
