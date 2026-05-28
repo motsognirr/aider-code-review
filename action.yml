@@ -1,5 +1,5 @@
 name: aider-code-review
-description: Agentic PR review using aider with DeepSeek as the backend model.
+description: Agentic PR review using aider. Supports DeepSeek (default) and OpenAI/ChatGPT backends.
 author: motsognirr
 branding:
   icon: eye
@@ -7,8 +7,17 @@ branding:
 
 inputs:
   deepseek_api_key:
-    description: DeepSeek API key (passed to aider as DEEPSEEK_API_KEY).
-    required: true
+    description: >-
+      DeepSeek API key (passed to aider as DEEPSEEK_API_KEY). Required when
+      using a DeepSeek model (the default).
+    required: false
+    default: ""
+  openai_api_key:
+    description: >-
+      OpenAI API key (passed to aider as OPENAI_API_KEY). Required when using
+      an OpenAI model (e.g. `model: gpt-4o`).
+    required: false
+    default: ""
   github_token:
     description: "GitHub token with `pull-requests: write` and `contents: read`."
     required: true
@@ -78,6 +87,7 @@ runs:
       shell: bash
       env:
         DEEPSEEK_API_KEY: ${{ inputs.deepseek_api_key }}
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
         GH_TOKEN: ${{ inputs.github_token }}
         REPO: ${{ inputs.repo }}
         PR_NUMBER: ${{ inputs.pr_number }}
