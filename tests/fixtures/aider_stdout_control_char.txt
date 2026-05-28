@@ -1,0 +1,18 @@
+► **ANSWER**
+
+```json
+[
+  {
+    "path": "olmlx/engine/inference.py",
+    "line": 3720,
+    "severity": "high",
+    "category": "bug",
+    "body": "generate_transcription does not verify the loaded model is a
+whisper model, so a non-whisper model injected via the model parameter would
+reach transcribe() and fail cryptically. Add a guard:\n\nif not is_whisper: raise ValueError(...)"
+  }
+]
+```
+
+## Summary
+One high-severity finding.
