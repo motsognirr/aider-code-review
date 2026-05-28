@@ -21,7 +21,12 @@ def main():
     if not blocks:
         sys.exit(2)
     try:
-        parsed = json.loads(blocks[-1])
+        # strict=False tolerates literal control characters (e.g. raw newlines)
+        # inside string values. aider word-wraps its output to the console
+        # width, which can inject newlines into the JSON strings; those are
+        # illegal under strict JSON but harmless content. Genuinely malformed
+        # JSON still raises and exits 3.
+        parsed = json.loads(blocks[-1], strict=False)
     except json.JSONDecodeError as e:
         print(f"json parse error: {e}", file=sys.stderr)
         sys.exit(3)

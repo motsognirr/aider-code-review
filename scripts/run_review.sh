@@ -119,7 +119,14 @@ set +e
 # Ask mode: aider only answers; no editor pass, no SEARCH/REPLACE edits.
 # Architect mode would feed our prompt to an editor model that tries to
 # turn the response into file edits, which mangles structured JSON output.
-env "$KEY_VAR=${!KEY_VAR}" aider \
+#
+# COLUMNS: aider renders output through rich, which word-wraps to the console
+# width — 80 cols when stdout is not a TTY (as in CI). That wrapping injects
+# raw newlines into the model's JSON string values, producing invalid JSON
+# (illegal control characters) that the extractor would otherwise reject. A
+# wide width keeps the JSON (and finding bodies) unwrapped. --no-pretty alone
+# does not disable width-based wrapping.
+env "$KEY_VAR=${!KEY_VAR}" COLUMNS=2000 aider \
   --chat-mode ask \
   --model "$MODEL" \
   --no-pretty \
