@@ -77,7 +77,7 @@ for i in $(seq 0 $((finding_count - 1))); do
 done
 
 echo "Posting summary comment..."
-body=$(printf '%s\n## aider-code-review\n\n%s\n' "$MARKER" "$(cat "$SUMMARY_FILE")")
+body=$(printf '%s\n## aider-code-review\n\n### Summary\n\n%s\n' "$MARKER" "$(cat "$SUMMARY_FILE")")
 summary_url=$(jq -nc --arg body "$body" '{body: $body}' \
   | gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input - \
   | jq -r '.html_url')
