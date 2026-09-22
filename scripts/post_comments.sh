@@ -67,7 +67,10 @@ posted=0
 failed=0
 finding_count=$(jq -r 'length' "$FINDINGS_FILE")
 echo "Posting $finding_count inline comments..."
-for i in $(seq 0 $((finding_count - 1))); do
+# Bash arithmetic rather than `seq 0 $((finding_count - 1))`: for an empty
+# findings list that asks for `seq 0 -1`, which GNU seq leaves empty but BSD
+# seq counts *down* from, posting bogus comments on a macOS runner.
+for ((i = 0; i < finding_count; i++)); do
   payload=$(jq -c --arg sha "$HEAD_SHA" --arg marker "$MARKER" --argjson i "$i" '
     .[$i] as $f
     | {
