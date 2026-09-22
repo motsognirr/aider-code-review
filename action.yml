@@ -33,6 +33,21 @@ inputs:
     description: Model aider uses in ask mode.
     required: false
     default: deepseek/deepseek-reasoner
+  comment_key:
+    description: >
+      Identity used to namespace this reviewer's PR comments. Each run deletes
+      its prior comments by matching a marker built from this key, so two jobs
+      reviewing the same PR must not share one. Defaults to `model`, which is
+      already distinct in the usual multi-model setup; set it explicitly only
+      when two jobs run the *same* model.
+    required: false
+    default: ""
+  sweep_legacy_comments:
+    description: >
+      Also delete comments left by versions of this action that predate
+      per-reviewer markers. Set to `false` to leave them in place.
+    required: false
+    default: "true"
   max_files:
     description: Maximum number of changed files to fetch for context.
     required: false
@@ -92,6 +107,8 @@ runs:
         REPO: ${{ inputs.repo }}
         PR_NUMBER: ${{ inputs.pr_number }}
         MODEL: ${{ inputs.model }}
+        COMMENT_KEY: ${{ inputs.comment_key }}
+        SWEEP_LEGACY_COMMENTS: ${{ inputs.sweep_legacy_comments }}
         MAX_FILES: ${{ inputs.max_files }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
         FIRST_TIME_GATE_LABEL: ${{ inputs.first_time_contributor_gate_label }}
