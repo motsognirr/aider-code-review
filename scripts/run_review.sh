@@ -11,6 +11,12 @@ set -euo pipefail
 : "${REPO:?REPO is required}"
 : "${PR_NUMBER:?PR_NUMBER is required}"
 : "${MODEL:=deepseek/deepseek-reasoner}"
+: "${COMMENT_KEY:=}"
+: "${SWEEP_LEGACY_COMMENTS:=true}"
+# post_comments.sh runs as a child process and scopes its comment marker by
+# these. A `:=` default on an unset variable is not exported, which would
+# silently collapse every reviewer onto one shared marker again.
+export MODEL COMMENT_KEY SWEEP_LEGACY_COMMENTS
 : "${MAX_FILES:=20}"
 : "${EXCLUDE_PATTERNS:=}"
 : "${FIRST_TIME_GATE_LABEL:=}"

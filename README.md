@@ -101,11 +101,44 @@ checkout, install, or test steps before invoking it.
 | `pr_number` | no | event payload | Override for `workflow_dispatch` |
 | `repo` | no | workflow repo | Override for cross-repo callers |
 | `model` | no | `deepseek/deepseek-reasoner` | Model aider uses in ask mode. OpenAI models route to `openai_api_key`; others to `deepseek_api_key`. |
+| `comment_key` | no | value of `model` | Namespaces this reviewer's comments. Set only when two jobs run the *same* model — see [Running more than one reviewer](#running-more-than-one-reviewer). |
+| `sweep_legacy_comments` | no | `"true"` | Also delete comments from versions predating per-reviewer markers |
 | `max_files` | no | `20` | Cap on fetched changed files |
 | `exclude_patterns` | no | sane defaults | Newline-separated globs |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
 | `aider_version` | no | latest | Pin for reproducibility |
 | `dry_run` | no | `"false"` | Print findings to job log; skip posting |
+
+## Running more than one reviewer
+
+A common setup runs this action twice on one PR for a second opinion:
+
+```yaml
+gpt-review:
+  steps:
+    - uses: motsognirr/aider-code-review@v1
+      with:
+        openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        model: openai/gpt-5.6-luna
+
+deepseek-review:
+  steps:
+    - uses: motsognirr/aider-code-review@v1
+      with:
+        deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        model: deepseek/deepseek-flash
+```
+
+Each run deletes its **own** prior comments before posting, so re-running a
+reviewer replaces its previous output rather than stacking duplicates. Comments
+are namespaced by `comment_key`, which defaults to `model` — so the two jobs
+above never touch each other's findings, in either finish order.
+
+If you run two jobs on the *same* model (different prompts, say), give them
+distinct `comment_key` values. Without that they share one namespace and
+whichever finishes last deletes the other's comments.
 
 ## Outputs
 

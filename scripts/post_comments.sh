@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
-# Delete prior bot comments and post fresh inline + summary comments.
+# Delete this reviewer's prior comments and post fresh inline + summary ones.
 # Required env: REPO, PR_NUMBER, SANDBOX
 # Optional env: DRY_RUN (true|false, default false)
+#               MODEL, COMMENT_KEY  -- scope the marker (see comment_marker.py)
+#               SWEEP_LEGACY_COMMENTS (true|false, default true)
 set -euo pipefail
 
 : "${REPO:?REPO is required}"
 : "${PR_NUMBER:?PR_NUMBER is required}"
 : "${SANDBOX:?SANDBOX is required}"
 : "${DRY_RUN:=false}"
+: "${MODEL:=}"
+: "${COMMENT_KEY:=}"
+: "${SWEEP_LEGACY_COMMENTS:=true}"
 
-MARKER="<!-- aider-code-review -->"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+# One comment namespace per reviewer. Concurrent jobs reviewing the same PR
+# with different models must not match each other's comments -- a shared marker
+# meant whichever job finished last deleted the other's findings.
+LEGACY_MARKER="<!-- aider-code-review -->"
+MARKER=$("$SCRIPT_DIR/comment_marker.py" "${COMMENT_KEY:-$MODEL}")
+echo "Comment marker: $MARKER"
 
 FINDINGS_FILE="$SANDBOX/findings.json"
 SUMMARY_FILE="$SANDBOX/summary.md"
@@ -27,20 +39,24 @@ if [ "$DRY_RUN" = "true" ]; then
   exit 0
 fi
 
-echo "Deleting prior bot inline comments with marker..."
+echo "Deleting prior inline comments for this marker..."
 gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" \
   | jq -r --arg marker "$MARKER" \
-      '.[] | select(.user.type == "Bot" and (.body | contains($marker))) | .id' \
+      --arg legacy_marker "$LEGACY_MARKER" \
+      --argjson sweep_legacy "$SWEEP_LEGACY_COMMENTS" \
+      -f "$SCRIPT_DIR/select_stale_comments.jq" \
   | while IFS= read -r cid; do
       [ -z "$cid" ] && continue
       gh api -X DELETE "repos/$REPO/pulls/comments/$cid" >/dev/null || \
         echo "warn: could not delete inline comment $cid" >&2
     done
 
-echo "Deleting prior bot summary comments with marker..."
+echo "Deleting prior summary comments for this marker..."
 gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
   | jq -r --arg marker "$MARKER" \
-      '.[] | select(.user.type == "Bot" and (.body | contains($marker))) | .id' \
+      --arg legacy_marker "$LEGACY_MARKER" \
+      --argjson sweep_legacy "$SWEEP_LEGACY_COMMENTS" \
+      -f "$SCRIPT_DIR/select_stale_comments.jq" \
   | while IFS= read -r cid; do
       [ -z "$cid" ] && continue
       gh api -X DELETE "repos/$REPO/issues/comments/$cid" >/dev/null || \
