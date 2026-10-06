@@ -40,9 +40,13 @@ while IFS= read -r path; do
     excluded=0
     while IFS= read -r pat; do
       [ -z "$pat" ] && continue
+      # A `case` glob's `**/` is just `*` then `/`, so it demands at least one
+      # directory. Also try the pattern with a *leading* `**/` stripped, so it
+      # matches at the repo root too (`**/*.lock` catches Cargo.lock). A `**`
+      # mid-pattern still needs at least one directory; see action.yml.
       # shellcheck disable=SC2053
       case "$path" in
-        $pat) excluded=1; break ;;
+        $pat|${pat#\*\*/}) excluded=1; break ;;
       esac
     done <<< "$EXCLUDE_PATTERNS"
     [ "$excluded" -eq 1 ] && continue

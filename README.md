@@ -104,7 +104,7 @@ checkout, install, or test steps before invoking it.
 | `comment_key` | no | value of `model` | Namespaces this reviewer's comments. Set only when two jobs run the *same* model — see [Running more than one reviewer](#running-more-than-one-reviewer). |
 | `sweep_legacy_comments` | no | `"true"` | Also delete comments from versions predating per-reviewer markers |
 | `max_files` | no | `20` | Cap on fetched changed files |
-| `exclude_patterns` | no | sane defaults | Newline-separated globs |
+| `exclude_patterns` | no | sane defaults | Newline-separated shell globs; a leading `**/` also matches the repo root |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
 | `aider_version` | no | latest | Pin for reproducibility |
 | `dry_run` | no | `"false"` | Print findings to job log; skip posting |
@@ -145,10 +145,11 @@ whichever finishes last deletes the other's comments.
 | Output | Description |
 |---|---|
 | `findings_count` | Surviving findings posted (or would-be in dry_run) |
-| `dropped_hallucinations_count` | Findings dropped by the guard |
+| `dropped_hallucinations_count` | Findings dropped by the guard: not on an added line, or malformed |
 | `posted_inline_count` | Inline comments successfully posted |
 | `failed_posts_count` | Inline POSTs that errored |
 | `summary_comment_url` | URL of the posted summary comment |
+| `skipped` | `"true"` if the first-time-contributor gate skipped the review |
 
 ## How it works
 
