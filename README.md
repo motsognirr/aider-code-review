@@ -24,6 +24,7 @@ concurrency:
 jobs:
   review:
     runs-on: [self-hosted, macOS]
+    timeout-minutes: 20
     steps:
       - uses: motsognirr/aider-code-review@v1
         with:
@@ -113,6 +114,7 @@ checkout, install, or test steps before invoking it.
 | `exclude_patterns` | no | sane defaults | Newline-separated shell globs; a leading `**/` also matches the repo root |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
 | `aider_version` | no | latest | Pin for reproducibility |
+| `api_timeout` | no | `"600"` | Seconds per model API call before aider gives up |
 | `dry_run` | no | `"false"` | Print findings to job log; skip posting |
 
 ## Running more than one reviewer

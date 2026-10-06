@@ -76,6 +76,11 @@ inputs:
     description: aider-chat version to install (defaults to latest).
     required: false
     default: ""
+  api_timeout:
+    description: >-
+      Seconds to wait for each model API call before aider gives up on it.
+    required: false
+    default: "600"
   dry_run:
     description: If "true", print findings to job log instead of posting.
     required: false
@@ -124,6 +129,7 @@ runs:
         FIRST_TIME_GATE_LABEL: ${{ inputs.first_time_contributor_gate_label }}
         AIDER_VERSION: ${{ inputs.aider_version }}
         DRY_RUN: ${{ inputs.dry_run }}
+        API_TIMEOUT: ${{ inputs.api_timeout }}
         ACTION_DIR: ${{ github.action_path }}
       run: |
         bash "${{ github.action_path }}/scripts/run_review.sh"

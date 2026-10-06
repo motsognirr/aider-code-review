@@ -83,3 +83,10 @@ def test_aider_reads_diff_and_fetched_head_files_only(run):
 def test_aider_stdout_lands_in_sandbox(run):
     _, _, sandbox = run
     assert (sandbox / "aider.stdout").read_text() == "aider stdout\n"
+
+
+def test_api_calls_have_a_timeout(run):
+    # aider's own default is no timeout, so one stalled provider request hung a
+    # self-test run until it was cancelled (GitHub's job cap is 6 hours).
+    _, argv, _ = run
+    assert argv[argv.index("--timeout") + 1] == "600"
