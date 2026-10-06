@@ -69,3 +69,11 @@ def test_last_summary_heading_wins():
     result = run("aider_stdout_two_summaries.txt")
     assert result.returncode == 0
     assert result.stdout == "final summary\n"
+
+
+def test_summary_of_only_the_usage_report_counts_as_missing():
+    # Stripping the report must not leave an empty "summary" that would be
+    # posted as a blank comment instead of the fallback.
+    result = run("aider_stdout_summary_only_usage.txt")
+    assert result.returncode == 2
+    assert result.stdout == ""

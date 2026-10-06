@@ -36,8 +36,10 @@ def main():
     ))
     if not matches:
         sys.exit(2)
-    body = USAGE_REPORT.sub("", "\n" + matches[-1].group(1))
-    sys.stdout.write(body.strip() + "\n")
+    body = USAGE_REPORT.sub("", "\n" + matches[-1].group(1)).strip()
+    if not body:
+        sys.exit(2)  # nothing but the usage report: no summary to post
+    sys.stdout.write(body + "\n")
 
 
 if __name__ == "__main__":
