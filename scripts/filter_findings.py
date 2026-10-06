@@ -15,29 +15,35 @@ def parse_added_lines(diff_text):
     """Return {path: set(line_numbers)} of every '+' line on the new side."""
     added = defaultdict(set)
     current_path = None
-    new_line = None
+    new_line = 0
+    # Lines still owed by the current hunk, per side, from its `@@` header.
+    # While either is positive every line is hunk content, even one that
+    # looks like a header: the added line `++i;` arrives as `+++i;`.
+    old_left = new_left = 0
     for raw in diff_text.splitlines():
+        if old_left > 0 or new_left > 0:
+            if raw.startswith("+"):
+                added[current_path].add(new_line)
+                new_line += 1
+                new_left -= 1
+            elif raw.startswith("-"):
+                old_left -= 1
+            elif raw.startswith(" ") or raw == "":
+                new_line += 1
+                old_left -= 1
+                new_left -= 1
+            # `\ No newline at end of file` consumes neither side.
+            continue
         m_path = re.match(r"^\+\+\+ b/(.+)$", raw)
         if m_path:
             current_path = m_path.group(1)
-            new_line = None
             continue
-        m_hunk = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", raw)
-        if m_hunk:
-            new_line = int(m_hunk.group(1))
-            continue
-        if current_path is None or new_line is None:
-            continue
-        if raw.startswith("+++") or raw.startswith("---"):
-            continue
-        if raw.startswith("+"):
-            added[current_path].add(new_line)
-            new_line += 1
-        elif raw.startswith("-"):
-            pass  # no new-side advance
-        elif raw.startswith(" ") or raw == "":
-            new_line += 1
-        # other markers (\ No newline at end of file, diff headers) — ignore
+        m_hunk = re.match(r"^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@", raw)
+        if m_hunk and current_path is not None:
+            # An omitted count means 1.
+            old_left = int(m_hunk.group(1) or 1)
+            new_line = int(m_hunk.group(2))
+            new_left = int(m_hunk.group(3) or 1)
 
     return added
 

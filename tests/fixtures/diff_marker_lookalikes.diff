@@ -1,0 +1,19 @@
+diff --git a/src/loop.c b/src/loop.c
+index 0000001..0000002 100644
+--- a/src/loop.c
++++ b/src/loop.c
+@@ -1,4 +1,5 @@
+ int i = 0;
+--- removed SQL-style comment
++++i;
++++ b/not/a/header.c
++check(i);
+ return i;
+diff --git a/src/next.c b/src/next.c
+index 0000003..0000004 100644
+--- a/src/next.c
++++ b/src/next.c
+@@ -3,2 +3,3 @@
+ a();
++b();
+ c();

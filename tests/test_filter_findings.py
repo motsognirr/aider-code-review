@@ -106,3 +106,30 @@ def test_reports_drop_count_on_stderr(tmp_path):
     result = run(findings, "diff_basic.diff", tmp_path)
     assert result.returncode == 0
     assert "dropped 1" in result.stderr
+
+
+def _at(path, line):
+    return {"path": path, "line": line, "severity": "low",
+            "category": "bug", "body": "x"}
+
+
+def test_added_lines_that_look_like_file_headers_still_count(tmp_path):
+    # `+++i;` is the added line `++i;` and `--- removed...` is the removed line
+    # `-- removed...`; inside a hunk neither is a file header. Line 2 is `++i;`,
+    # line 3 the header lookalike, line 4 `check(i);`.
+    findings = [_at("src/loop.c", 2), _at("src/loop.c", 3), _at("src/loop.c", 4)]
+    result = run(findings, "diff_marker_lookalikes.diff", tmp_path)
+    assert result.returncode == 0
+    assert json.loads(result.stdout) == findings
+
+
+def test_header_lookalike_does_not_hijack_the_file_path(tmp_path):
+    findings = [_at("not/a/header.c", 1), _at("src/next.c", 4)]
+    result = run(findings, "diff_marker_lookalikes.diff", tmp_path)
+    assert json.loads(result.stdout) == [_at("src/next.c", 4)]
+
+
+def test_context_line_after_lookalikes_is_still_dropped(tmp_path):
+    # `return i;` is new-side line 5, a context line.
+    result = run([_at("src/loop.c", 5)], "diff_marker_lookalikes.diff", tmp_path)
+    assert json.loads(result.stdout) == []
