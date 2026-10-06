@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract the last fenced ```json``` block from aider's stdout.
+"""Extract the last fenced ```json``` block from aider's response.
 
 Usage: extract_json.py <aider-stdout-file>
 Exit codes:
@@ -11,12 +11,16 @@ import json
 import re
 import sys
 
+from aider_output import answer_text
+
 
 def main():
     if len(sys.argv) != 2:
         print("usage: extract_json.py <file>", file=sys.stderr)
         sys.exit(64)
     text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
+    # Not a block drafted in a reasoning model's thinking: see aider_output.
+    text = answer_text(text)
     openings = list(re.finditer(r"```json\s*\n", text))
     if not openings:
         sys.exit(2)
