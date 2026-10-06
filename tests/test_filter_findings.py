@@ -148,3 +148,12 @@ def test_drops_findings_whose_text_fields_are_not_strings(tmp_path):
     ]
     result = run([good, *bad], "diff_basic.diff", tmp_path)
     assert json.loads(result.stdout) == [good]
+
+
+def test_diff_fixtures_are_well_formed_patches():
+    # A hand-written fixture with a miscounted hunk header can make a test pass
+    # for the wrong reason, since the parser trusts those counts.
+    for fixture in sorted(FIX.glob("*.diff")):
+        proc = subprocess.run(["git", "apply", "--stat", str(fixture)],
+                              capture_output=True, text=True)
+        assert proc.returncode == 0, f"{fixture.name}: {proc.stderr}"
