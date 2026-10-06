@@ -17,16 +17,22 @@ def main():
         print("usage: extract_json.py <file>", file=sys.stderr)
         sys.exit(64)
     text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
-    blocks = re.findall(r"```json\s*\n(.*?)```", text, re.DOTALL)
-    if not blocks:
+    openings = list(re.finditer(r"```json\s*\n", text))
+    if not openings:
         sys.exit(2)
+    # Decode from the last opening fence rather than regex-matching up to the
+    # closing one: finding bodies are Markdown and often contain ``` code
+    # snippets, which a fence-to-fence match would cut off mid-string.
+    # raw_decode stops at the end of the JSON value, wherever the fence is.
+    start = openings[-1].end()
+    start += len(text[start:]) - len(text[start:].lstrip())
     try:
         # strict=False tolerates literal control characters (e.g. raw newlines)
         # inside string values. aider word-wraps its output to the console
         # width, which can inject newlines into the JSON strings; those are
         # illegal under strict JSON but harmless content. Genuinely malformed
         # JSON still raises and exits 3.
-        parsed = json.loads(blocks[-1], strict=False)
+        parsed, _ = json.JSONDecoder(strict=False).raw_decode(text, start)
     except json.JSONDecodeError as e:
         print(f"json parse error: {e}", file=sys.stderr)
         sys.exit(3)
