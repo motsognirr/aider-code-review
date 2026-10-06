@@ -1,0 +1,10 @@
+```json
+[]
+```
+
+## Summary
+
+Nothing blocking. Token budgets are respected by the new limiter.
+
+Tokens: 16k sent, 16k cache write, 4.1k cache hit, 31k received.
+Cost: $0.04 message, $0.04 session.
