@@ -213,4 +213,5 @@ summary_url=$(cat "$SANDBOX/summary_url")
   echo "posted_inline_count=$posted"
   echo "failed_posts_count=$failed"
   echo "summary_comment_url=$summary_url"
+  echo "skipped=false"
 } >> "${GITHUB_OUTPUT:-/dev/stdout}"

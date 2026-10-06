@@ -149,6 +149,7 @@ whichever finishes last deletes the other's comments.
 | `posted_inline_count` | Inline comments successfully posted |
 | `failed_posts_count` | Inline POSTs that errored |
 | `summary_comment_url` | URL of the posted summary comment |
+| `skipped` | `"true"` if the first-time-contributor gate skipped the review |
 
 ## How it works
 

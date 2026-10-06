@@ -93,6 +93,10 @@ outputs:
   summary_comment_url:
     description: URL of the posted summary comment.
     value: ${{ steps.review.outputs.summary_comment_url }}
+  skipped:
+    description: >-
+      "true" if the first-time-contributor gate skipped the review, else "false".
+    value: ${{ steps.review.outputs.skipped }}
 
 runs:
   using: composite
