@@ -8,6 +8,11 @@ permissions:
   pull-requests: write
   contents: read
 
+# One review per PR at a time; a new push supersedes the in-flight one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
     runs-on: [self-hosted, macOS]

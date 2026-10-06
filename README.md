@@ -18,6 +18,9 @@ on:
 permissions:
   pull-requests: write
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   review:
     runs-on: [self-hosted, macOS]
@@ -29,6 +32,9 @@ jobs:
 ```
 
 Set the `DEEPSEEK_API_KEY` secret in the consumer repo (or org).
+
+The `concurrency` group keeps one review per PR in flight: a new push cancels
+the run it supersedes instead of racing it to post and clean up comments.
 
 ## Using OpenAI/ChatGPT
 
