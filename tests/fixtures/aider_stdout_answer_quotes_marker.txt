@@ -1,0 +1,22 @@
+--------------
+► **THINKING**
+
+Check the parser change.
+
+------------
+► **ANSWER**
+
+```json
+[{"path": "scripts/aider_output.py", "line": 6, "severity": "low", "category": "bug", "body": "Quotes `► **ANSWER**` in prose."}]
+```
+
+## Summary
+
+The separator aider prints is:
+
+```
+------------
+► **ANSWER**
+```
+
+One low finding.
