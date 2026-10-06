@@ -53,7 +53,11 @@ inputs:
     required: false
     default: "20"
   exclude_patterns:
-    description: Newline-separated glob patterns to exclude from context.
+    description: >-
+      Newline-separated shell glob patterns to exclude from context. `*`
+      matches across `/`, and a leading `**/` also matches at the repo root
+      (`**/*.lock` catches `Cargo.lock`); a `**` mid-pattern still needs at
+      least one directory.
     required: false
     default: |
       **/*.lock
@@ -82,7 +86,9 @@ outputs:
     description: Number of surviving findings posted (or would-be in dry_run).
     value: ${{ steps.review.outputs.findings_count }}
   dropped_hallucinations_count:
-    description: Findings dropped by the hallucination guard.
+    description: >-
+      Findings dropped by the guard: not on a line the PR adds, or malformed
+      (non-string severity/category/body, or an empty body).
     value: ${{ steps.review.outputs.dropped_hallucinations_count }}
   posted_inline_count:
     description: Inline comments successfully posted.
