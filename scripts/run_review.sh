@@ -119,17 +119,10 @@ aider_rc=$?
 set -e
 echo "aider exit code: $aider_rc"
 
-# --- Scrub secrets from aider stdout before any further processing ---
-python3 - <<PY
-import os, re
-path = os.environ["SANDBOX"] + "/aider.stdout"
-text = open(path, encoding="utf-8", errors="replace").read()
-for var in ("DEEPSEEK_API_KEY", "OPENAI_API_KEY", "GH_TOKEN"):
-    val = os.environ.get(var, "")
-    if val:
-        text = text.replace(val, "[REDACTED]")
-open(path, "w", encoding="utf-8").write(text)
-PY
+# --- Scrub secrets from aider output before any further processing ---
+# Both files can reach the PR: stdout via the summary and the unstructured-
+# output fallback, stderr via the "review incomplete" tail.
+"$ACTION_DIR/scripts/scrub_secrets.py" "$SANDBOX/aider.stdout" "$SANDBOX/aider.stderr"
 
 # --- Extract JSON findings ---
 findings_json="$SANDBOX/findings_raw.json"
