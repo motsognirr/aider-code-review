@@ -64,3 +64,18 @@ def test_code_fence_inside_body_does_not_truncate_block():
     parsed = json.loads(result.stdout)
     assert len(parsed) == 1
     assert "```python\nif x is None:" in parsed[0]["body"]
+
+
+def test_json_drafted_only_in_reasoning_is_not_a_finding():
+    # A reasoning model's THINKING section can draft a findings block it then
+    # abandons. Only aider's ANSWER counts, or the draft is posted as real
+    # inline comments.
+    result = run("aider_stdout_reasoning_draft_json.txt")
+    assert result.returncode == 2
+    assert result.stdout.strip() == ""
+
+
+def test_answer_json_wins_over_reasoning_draft():
+    result = run("aider_stdout_reasoning_answer_json.txt")
+    assert result.returncode == 0
+    assert [f["path"] for f in json.loads(result.stdout)] == ["src/real.py"]

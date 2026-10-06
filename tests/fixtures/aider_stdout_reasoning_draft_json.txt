@@ -1,0 +1,19 @@
+--------------
+► **THINKING**
+
+Draft the findings first:
+
+```json
+[{"path": "src/draft.py", "line": 3, "severity": "high", "category": "bug", "body": "draft only"}]
+```
+
+Actually that line is fine. No findings.
+
+------------
+► **ANSWER**
+
+No issues found.
+
+## Summary
+
+Nothing blocking.

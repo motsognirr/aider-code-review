@@ -1,0 +1,15 @@
+--------------
+► **THINKING**
+
+My reply goes after the ► **ANSWER** header. Draft:
+
+## Summary
+
+draft summary from the thinking
+
+------------
+► **ANSWER**
+
+```json
+[]
+```

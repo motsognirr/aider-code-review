@@ -1,0 +1,19 @@
+--------------
+► **THINKING**
+
+Draft:
+
+```json
+[{"path": "src/draft.py", "line": 3, "severity": "high", "category": "bug", "body": "draft only"}]
+```
+
+------------
+► **ANSWER**
+
+```json
+[{"path": "src/real.py", "line": 7, "severity": "low", "category": "bug", "body": "real"}]
+```
+
+## Summary
+
+One finding.
