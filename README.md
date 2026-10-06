@@ -131,8 +131,9 @@ deepseek-review:
         model: deepseek/deepseek-flash
 ```
 
-Each run deletes its **own** prior comments before posting, so re-running a
-reviewer replaces its previous output rather than stacking duplicates. Comments
+Each run posts its fresh comments, then deletes its **own** prior ones, so
+re-running a reviewer replaces its previous output rather than stacking
+duplicates — and if posting fails, the previous review stays up. Comments
 are namespaced by `comment_key`, which defaults to `model` — so the two jobs
 above never touch each other's findings, in either finish order.
 

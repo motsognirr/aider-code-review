@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Delete this reviewer's prior comments and post fresh inline + summary ones.
+# Post fresh inline + summary comments, then delete this reviewer's prior ones.
 # Required env: REPO, PR_NUMBER, SANDBOX
 # Optional env: DRY_RUN (true|false, default false)
 #               MODEL, COMMENT_KEY  -- scope the marker (see comment_marker.py)
@@ -39,29 +39,19 @@ if [ "$DRY_RUN" = "true" ]; then
   exit 0
 fi
 
-echo "Deleting prior inline comments for this marker..."
-gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/comments" \
-  | jq -r --arg marker "$MARKER" \
-      --arg legacy_marker "$LEGACY_MARKER" \
-      --argjson sweep_legacy "$SWEEP_LEGACY_COMMENTS" \
-      -f "$SCRIPT_DIR/select_stale_comments.jq" \
-  | while IFS= read -r cid; do
-      [ -z "$cid" ] && continue
-      gh api -X DELETE "repos/$REPO/pulls/comments/$cid" >/dev/null || \
-        echo "warn: could not delete inline comment $cid" >&2
-    done
-
-echo "Deleting prior summary comments for this marker..."
-gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
-  | jq -r --arg marker "$MARKER" \
-      --arg legacy_marker "$LEGACY_MARKER" \
-      --argjson sweep_legacy "$SWEEP_LEGACY_COMMENTS" \
-      -f "$SCRIPT_DIR/select_stale_comments.jq" \
-  | while IFS= read -r cid; do
-      [ -z "$cid" ] && continue
-      gh api -X DELETE "repos/$REPO/issues/comments/$cid" >/dev/null || \
-        echo "warn: could not delete issue comment $cid" >&2
-    done
+# Post first, delete after. Deleting up front meant any posting failure left
+# the PR with no review at all; this way it keeps the previous one. The stale
+# set is captured *before* posting, since fresh comments carry the same marker.
+list_stale() {
+  gh api --paginate "$1" \
+    | jq -r --arg marker "$MARKER" \
+        --arg legacy_marker "$LEGACY_MARKER" \
+        --argjson sweep_legacy "$SWEEP_LEGACY_COMMENTS" \
+        -f "$SCRIPT_DIR/select_stale_comments.jq"
+}
+echo "Listing prior comments for this marker..."
+list_stale "repos/$REPO/pulls/$PR_NUMBER/comments" > "$SANDBOX/stale_inline_ids"
+list_stale "repos/$REPO/issues/$PR_NUMBER/comments" > "$SANDBOX/stale_issue_ids"
 
 posted=0
 failed=0
@@ -104,9 +94,26 @@ done
 
 echo "Posting summary comment..."
 body=$(printf '%s\n## aider-code-review\n\n### Summary\n\n%s\n' "$MARKER" "$(cat "$SUMMARY_FILE")")
-summary_url=$(jq -nc --arg body "$body" '{body: $body}' \
-  | gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input - \
-  | jq -r '.html_url')
+if ! summary_url=$(jq -nc --arg body "$body" '{body: $body}' \
+     | gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input - \
+     | jq -r '.html_url'); then
+  echo "::error::failed to post the summary comment; leaving the previous review in place." >&2
+  exit 1
+fi
+
+# Delete by snapshot id. `pulls/comments/<id>` and `issues/comments/<id>` are
+# the inline and summary delete endpoints respectively.
+delete_stale() {
+  local kind=$1 ids=$2 cid
+  while IFS= read -r cid; do
+    [ -z "$cid" ] && continue
+    gh api -X DELETE "repos/$REPO/$kind/comments/$cid" >/dev/null || \
+      echo "warn: could not delete $kind comment $cid" >&2
+  done < "$ids"
+}
+echo "Deleting prior comments for this marker..."
+delete_stale pulls "$SANDBOX/stale_inline_ids"
+delete_stale issues "$SANDBOX/stale_issue_ids"
 
 echo "$posted" > "$SANDBOX/posted_inline_count"
 echo "$failed" > "$SANDBOX/failed_posts_count"
