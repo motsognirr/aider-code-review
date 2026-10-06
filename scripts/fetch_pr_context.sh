@@ -40,9 +40,12 @@ while IFS= read -r path; do
     excluded=0
     while IFS= read -r pat; do
       [ -z "$pat" ] && continue
+      # A `case` glob's `**/` is just `*` then `/`, so it demands at least one
+      # directory. Also try the pattern with it stripped, so `**/` matches zero
+      # or more directories as in gitignore (`**/*.lock` catches Cargo.lock).
       # shellcheck disable=SC2053
       case "$path" in
-        $pat) excluded=1; break ;;
+        $pat|${pat#\*\*/}) excluded=1; break ;;
       esac
     done <<< "$EXCLUDE_PATTERNS"
     [ "$excluded" -eq 1 ] && continue
