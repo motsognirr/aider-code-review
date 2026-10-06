@@ -4,7 +4,9 @@
 Usage: extract_summary.py <aider-stdout-file>
 Exit codes:
   0 — summary written to stdout
-  2 — no `## Summary` heading found
+  2 — no usable summary: no `## Summary` heading in the response, or its body
+      is empty once aider's usage report is removed (the caller falls back
+      to a generated summary either way)
 """
 import re
 import sys
