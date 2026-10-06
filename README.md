@@ -18,9 +18,13 @@ on:
 permissions:
   pull-requests: write
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   review:
     runs-on: [self-hosted, macOS]
+    timeout-minutes: 20
     steps:
       - uses: motsognirr/aider-code-review@v1
         with:
@@ -29,6 +33,9 @@ jobs:
 ```
 
 Set the `DEEPSEEK_API_KEY` secret in the consumer repo (or org).
+
+The `concurrency` group keeps one review per PR in flight: a new push cancels
+the run it supersedes instead of racing it to post and clean up comments.
 
 ## Using OpenAI/ChatGPT
 
@@ -107,6 +114,7 @@ checkout, install, or test steps before invoking it.
 | `exclude_patterns` | no | sane defaults | Newline-separated shell globs; a leading `**/` also matches the repo root |
 | `first_time_contributor_gate_label` | no | `""` | If set, gates review on label |
 | `aider_version` | no | latest | Pin for reproducibility |
+| `api_timeout` | no | `"600"` | Seconds per model API call before aider gives up |
 | `dry_run` | no | `"false"` | Print findings to job log; skip posting |
 
 ## Running more than one reviewer
@@ -131,8 +139,12 @@ deepseek-review:
         model: deepseek/deepseek-flash
 ```
 
-Each run deletes its **own** prior comments before posting, so re-running a
-reviewer replaces its previous output rather than stacking duplicates. Comments
+Each run posts its fresh comments, then deletes its **own** prior ones, so
+re-running a reviewer replaces its previous output rather than stacking
+duplicates. If the summary comment fails to post, nothing new is posted and
+the previous review stays up. Inline comments that fail to post individually
+(e.g. a 422 after a force-push moved the lines) are counted in
+`failed_posts_count`, and the previous review is still replaced. Comments
 are namespaced by `comment_key`, which defaults to `model` — so the two jobs
 above never touch each other's findings, in either finish order.
 

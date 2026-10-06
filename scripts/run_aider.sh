@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Run aider over the fetched PR context in $SANDBOX.
 # Required env: SANDBOX, ACTION_DIR, MODEL, KEY_VAR (+ the variable it names)
+# Optional env: API_TIMEOUT (seconds per model API call, default 600)
 # Writes $SANDBOX/aider.stdout and $SANDBOX/aider.stderr; exits with aider's rc.
 set -euo pipefail
 
@@ -8,6 +9,7 @@ set -euo pipefail
 : "${ACTION_DIR:?ACTION_DIR is required}"
 : "${MODEL:?MODEL is required}"
 : "${KEY_VAR:?KEY_VAR is required}"
+: "${API_TIMEOUT:=600}"
 
 cd "$SANDBOX"
 git init --quiet . >/dev/null
@@ -32,6 +34,9 @@ done < "$SANDBOX/included_files.txt"
 # aider reads attacker-controlled PR content and runs with --yes-always, so a
 # prompt injection in the diff must not be able to get a shell command
 # auto-run, and there must be no GitHub token in its environment to steal.
+#
+# --timeout: aider's default is none, so a stalled provider request would
+# hang the job until GitHub's 6-hour cap.
 exec env -u GH_TOKEN -u GITHUB_TOKEN "$KEY_VAR=${!KEY_VAR}" COLUMNS=2000 aider \
   --chat-mode ask \
   --model "$MODEL" \
@@ -39,6 +44,7 @@ exec env -u GH_TOKEN -u GITHUB_TOKEN "$KEY_VAR=${!KEY_VAR}" COLUMNS=2000 aider \
   --no-auto-commits --no-git --yes-always --no-stream \
   --no-show-model-warnings --no-check-update \
   --no-suggest-shell-commands \
+  --timeout "$API_TIMEOUT" \
   "${read_args[@]}" \
   --message "$(cat "$ACTION_DIR/prompts/architect.md")" \
   > "$SANDBOX/aider.stdout" 2> "$SANDBOX/aider.stderr"

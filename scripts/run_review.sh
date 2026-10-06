@@ -22,6 +22,7 @@ export MODEL COMMENT_KEY SWEEP_LEGACY_COMMENTS
 : "${FIRST_TIME_GATE_LABEL:=}"
 : "${AIDER_VERSION:=}"
 : "${DRY_RUN:=false}"
+: "${API_TIMEOUT:=600}"
 : "${ACTION_DIR:?ACTION_DIR is required}"
 
 # --- Resolve which provider key the chosen model needs, and validate it ---
@@ -114,6 +115,7 @@ fi
 # --- Run aider ---
 set +e
 SANDBOX="$SANDBOX" ACTION_DIR="$ACTION_DIR" MODEL="$MODEL" KEY_VAR="$KEY_VAR" \
+  API_TIMEOUT="$API_TIMEOUT" \
   "$ACTION_DIR/scripts/run_aider.sh"
 aider_rc=$?
 set -e

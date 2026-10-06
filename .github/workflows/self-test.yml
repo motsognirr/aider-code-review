@@ -8,9 +8,16 @@ permissions:
   pull-requests: write
   contents: read
 
+# One review per PR at a time; a new push supersedes the in-flight one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
     runs-on: [self-hosted, macOS]
+    # A healthy run takes ~4 min; the default cap is 6 hours.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
         with:
