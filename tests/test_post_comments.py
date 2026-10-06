@@ -134,3 +134,15 @@ def test_delete_pass_spares_the_other_reviewers_comments(harness):
     ]
     deleted = {c.rsplit("/", 1)[-1] for c in harness([], comments) if c.startswith("DELETE")}
     assert deleted == {"101", "303"}
+
+
+def test_unbuildable_finding_is_a_failed_post_not_an_abort(harness):
+    # A finding the payload builder can't render (numeric severity is a jq type
+    # error) must not stop the run after old comments were already deleted.
+    findings = [
+        {"path": "a.py", "line": 3, "severity": 3, "category": "bug", "body": "bad"},
+        {"path": "b.py", "line": 7, "severity": "low", "category": "bug", "body": "ok"},
+    ]
+    calls = harness(findings)
+    assert len([c for c in calls if c.startswith("POST pulls")]) == 1
+    assert len([c for c in calls if c.startswith("POST issues")]) == 1

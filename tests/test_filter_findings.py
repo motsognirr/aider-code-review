@@ -133,3 +133,18 @@ def test_context_line_after_lookalikes_is_still_dropped(tmp_path):
     # `return i;` is new-side line 5, a context line.
     result = run([_at("src/loop.c", 5)], "diff_marker_lookalikes.diff", tmp_path)
     assert json.loads(result.stdout) == []
+
+
+def test_drops_findings_whose_text_fields_are_not_strings(tmp_path):
+    # post_comments.sh concatenates severity/category/body into the comment;
+    # a number there is a jq type error, not a comment.
+    good = {"path": "src/foo.py", "line": 12, "severity": "high",
+            "category": "bug", "body": "real"}
+    bad = [
+        {**good, "severity": 3},
+        {**good, "category": ["bug"]},
+        {**good, "body": None},
+        {**good, "body": "   "},
+    ]
+    result = run([good, *bad], "diff_basic.diff", tmp_path)
+    assert json.loads(result.stdout) == [good]

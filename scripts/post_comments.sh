@@ -71,7 +71,9 @@ echo "Posting $finding_count inline comments..."
 # findings list that asks for `seq 0 -1`, which GNU seq leaves empty but BSD
 # seq counts *down* from, posting bogus comments on a macOS runner.
 for ((i = 0; i < finding_count; i++)); do
-  payload=$(jq -c --arg sha "$HEAD_SHA" --arg marker "$MARKER" --argjson i "$i" '
+  # A finding jq can't render is a failed post: under `set -e` it would
+  # otherwise abort the run after the prior comments were already deleted.
+  if ! payload=$(jq -c --arg sha "$HEAD_SHA" --arg marker "$MARKER" --argjson i "$i" '
     .[$i] as $f
     | {
         commit_id: $sha,
@@ -84,7 +86,12 @@ for ((i = 0; i < finding_count; i++)); do
       then . + {start_line: $f.line, line: $f.end_line, start_side: "RIGHT"}
       else .
       end
-  ' "$FINDINGS_FILE")
+  ' "$FINDINGS_FILE" 2>"$SANDBOX/post_err.$i"); then
+    failed=$((failed + 1))
+    echo "warn: could not build payload for finding $i:" >&2
+    cat "$SANDBOX/post_err.$i" >&2
+    continue
+  fi
   if echo "$payload" | gh api -X POST "repos/$REPO/pulls/$PR_NUMBER/comments" \
        --input - >/dev/null 2>"$SANDBOX/post_err.$i"; then
     posted=$((posted + 1))

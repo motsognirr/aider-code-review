@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Drop findings whose path:line is not an added (+) line in the PR diff.
+"""Drop findings whose path:line is not an added (+) line in the PR diff,
+or whose severity/category/body are not strings that can be posted.
 
 Usage: filter_findings.py <findings.json> <pr.diff>
 Writes surviving findings JSON to stdout. Logs `dropped N` to stderr.
@@ -53,6 +54,11 @@ def keep(finding, added):
     line = finding.get("line")
     end_line = finding.get("end_line")
     if not isinstance(path, str) or not isinstance(line, int):
+        return False
+    # Rendered into the comment text, so anything but a string can't post.
+    if not all(isinstance(finding.get(k), str) for k in ("severity", "category", "body")):
+        return False
+    if not finding["body"].strip():
         return False
     if path not in added:
         return False
