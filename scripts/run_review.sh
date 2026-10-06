@@ -112,35 +112,9 @@ if [ -n "$FIRST_TIME_GATE_LABEL" ]; then
 fi
 
 # --- Run aider ---
-cd "$SANDBOX"
-git init --quiet . >/dev/null
-
-read_args=( --read pr.diff )
-while IFS= read -r path; do
-  [ -z "$path" ] && continue
-  [ -f "head/$path" ] && read_args+=( --read "head/$path" )
-done < "$SANDBOX/included_files.txt"
-
 set +e
-# Ask mode: aider only answers; no editor pass, no SEARCH/REPLACE edits.
-# Architect mode would feed our prompt to an editor model that tries to
-# turn the response into file edits, which mangles structured JSON output.
-#
-# COLUMNS: aider renders output through rich, which word-wraps to the console
-# width — 80 cols when stdout is not a TTY (as in CI). That wrapping injects
-# raw newlines into the model's JSON string values, producing invalid JSON
-# (illegal control characters) that the extractor would otherwise reject. A
-# wide width keeps the JSON (and finding bodies) unwrapped. --no-pretty alone
-# does not disable width-based wrapping.
-env "$KEY_VAR=${!KEY_VAR}" COLUMNS=2000 aider \
-  --chat-mode ask \
-  --model "$MODEL" \
-  --no-pretty \
-  --no-auto-commits --no-git --yes-always --no-stream \
-  --no-show-model-warnings --no-check-update \
-  "${read_args[@]}" \
-  --message "$(cat "$ACTION_DIR/prompts/architect.md")" \
-  > "$SANDBOX/aider.stdout" 2> "$SANDBOX/aider.stderr"
+SANDBOX="$SANDBOX" ACTION_DIR="$ACTION_DIR" MODEL="$MODEL" KEY_VAR="$KEY_VAR" \
+  "$ACTION_DIR/scripts/run_aider.sh"
 aider_rc=$?
 set -e
 echo "aider exit code: $aider_rc"
