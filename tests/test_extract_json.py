@@ -53,3 +53,14 @@ def test_control_char_in_body_tolerated():
     assert parsed[0]["path"] == "olmlx/engine/inference.py"
     # The body survives; the wrap newline is preserved as content.
     assert "generate_transcription" in parsed[0]["body"]
+
+
+def test_code_fence_inside_body_does_not_truncate_block():
+    # Finding bodies are Markdown and routinely carry ``` code snippets. The
+    # closing fence of the outer ```json block must not be matched inside a
+    # JSON string value.
+    result = run("aider_stdout_fence_in_body.txt")
+    assert result.returncode == 0, result.stderr
+    parsed = json.loads(result.stdout)
+    assert len(parsed) == 1
+    assert "```python\nif x is None:" in parsed[0]["body"]

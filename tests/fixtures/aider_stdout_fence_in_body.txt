@@ -1,0 +1,14 @@
+```json
+[
+  {
+    "path": "src/foo.py",
+    "line": 12,
+    "severity": "medium",
+    "category": "bug",
+    "body": "Guard against `None` first:\n```python\nif x is None:\n    return\n```\nOtherwise this raises."
+  }
+]
+```
+
+## Summary
+One finding with a suggested fix.

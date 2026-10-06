@@ -12,7 +12,10 @@ set -euo pipefail
 mkdir -p "$SANDBOX/head"
 
 echo "Fetching PR diff..."
-gh pr diff "$PR_NUMBER" --repo "$REPO" --patch > "$SANDBOX/pr.diff"
+# The combined base..head diff, not `--patch`: that returns one format-patch
+# per commit, whose hunks carry line numbers from intermediate states rather
+# than the head the findings are anchored to.
+gh pr diff "$PR_NUMBER" --repo "$REPO" > "$SANDBOX/pr.diff"
 
 echo "Fetching PR metadata..."
 gh api "repos/$REPO/pulls/$PR_NUMBER" > "$SANDBOX/meta.json"
