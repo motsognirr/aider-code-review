@@ -182,3 +182,10 @@ def test_only_the_prior_comments_are_deleted_not_the_fresh_ones(harness):
 def test_failed_summary_post_keeps_the_previous_review(harness):
     calls = harness(ONE, STALE, extra_env={"FAIL_SUMMARY_POST": "1"}, expect_rc=1)
     assert [c for c in calls if c.startswith("DELETE")] == []
+
+
+def test_failed_summary_post_posts_no_inline_comments(harness):
+    # The summary goes first: if it fails, nothing new is up, so the previous
+    # review is left exactly as it was rather than duplicated alongside.
+    calls = harness(ONE, STALE, extra_env={"FAIL_SUMMARY_POST": "1"}, expect_rc=1)
+    assert [c for c in calls if c.startswith("POST pulls")] == []

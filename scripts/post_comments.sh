@@ -40,7 +40,8 @@ if [ "$DRY_RUN" = "true" ]; then
 fi
 
 # Post first, delete after. Deleting up front meant any posting failure left
-# the PR with no review at all; this way it keeps the previous one. The stale
+# the PR with no review at all. The summary goes first of all: if it fails,
+# nothing new is up and the previous review stays exactly as it was. The stale
 # set is captured *before* posting, since fresh comments carry the same marker.
 list_stale() {
   gh api --paginate "$1" \
@@ -53,6 +54,15 @@ echo "Listing prior comments for this marker..."
 list_stale "repos/$REPO/pulls/$PR_NUMBER/comments" > "$SANDBOX/stale_inline_ids"
 list_stale "repos/$REPO/issues/$PR_NUMBER/comments" > "$SANDBOX/stale_issue_ids"
 
+echo "Posting summary comment..."
+body=$(printf '%s\n## aider-code-review\n\n### Summary\n\n%s\n' "$MARKER" "$(cat "$SUMMARY_FILE")")
+if ! summary_url=$(jq -nc --arg body "$body" '{body: $body}' \
+     | gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input - \
+     | jq -r '.html_url'); then
+  echo "::error::failed to post the summary comment; nothing new was posted, previous review left in place." >&2
+  exit 1
+fi
+
 posted=0
 failed=0
 finding_count=$(jq -r 'length' "$FINDINGS_FILE")
@@ -62,7 +72,7 @@ echo "Posting $finding_count inline comments..."
 # seq counts *down* from, posting bogus comments on a macOS runner.
 for ((i = 0; i < finding_count; i++)); do
   # A finding jq can't render is a failed post: under `set -e` it would
-  # otherwise abort the run after the prior comments were already deleted.
+  # otherwise abort the run with only part of the new review posted.
   if ! payload=$(jq -c --arg sha "$HEAD_SHA" --arg marker "$MARKER" --argjson i "$i" '
     .[$i] as $f
     | {
@@ -91,15 +101,6 @@ for ((i = 0; i < finding_count; i++)); do
     cat "$SANDBOX/post_err.$i" >&2
   fi
 done
-
-echo "Posting summary comment..."
-body=$(printf '%s\n## aider-code-review\n\n### Summary\n\n%s\n' "$MARKER" "$(cat "$SUMMARY_FILE")")
-if ! summary_url=$(jq -nc --arg body "$body" '{body: $body}' \
-     | gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" --input - \
-     | jq -r '.html_url'); then
-  echo "::error::failed to post the summary comment; leaving the previous review in place." >&2
-  exit 1
-fi
 
 # Delete by snapshot id. `pulls/comments/<id>` and `issues/comments/<id>` are
 # the inline and summary delete endpoints respectively.

@@ -141,7 +141,10 @@ deepseek-review:
 
 Each run posts its fresh comments, then deletes its **own** prior ones, so
 re-running a reviewer replaces its previous output rather than stacking
-duplicates — and if posting fails, the previous review stays up. Comments
+duplicates. If the summary comment fails to post, nothing new is posted and
+the previous review stays up. Inline comments that fail to post individually
+(e.g. a 422 after a force-push moved the lines) are counted in
+`failed_posts_count`, and the previous review is still replaced. Comments
 are namespaced by `comment_key`, which defaults to `model` — so the two jobs
 above never touch each other's findings, in either finish order.
 
