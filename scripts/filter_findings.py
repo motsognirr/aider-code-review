@@ -22,6 +22,10 @@ def parse_added_lines(diff_text):
     # looks like a header: the added line `++i;` arrives as `+++i;`.
     old_left = new_left = 0
     for raw in diff_text.splitlines():
+        # Hunk lines always start with `+`, `-`, ` ` or `\`, so a file header
+        # ends any hunk whose header overstated its counts.
+        if raw.startswith("diff --git "):
+            old_left = new_left = 0
         if old_left > 0 or new_left > 0:
             if raw.startswith("+"):
                 added[current_path].add(new_line)

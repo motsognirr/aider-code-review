@@ -157,3 +157,27 @@ def test_diff_fixtures_are_well_formed_patches():
         proc = subprocess.run(["git", "apply", "--stat", str(fixture)],
                               capture_output=True, text=True)
         assert proc.returncode == 0, f"{fixture.name}: {proc.stderr}"
+
+
+def test_overcounted_hunk_does_not_swallow_the_next_file(tmp_path):
+    # The first hunk claims 6 new lines but has 2. A `diff --git` line can never
+    # be hunk content, so it must end the hunk rather than letting the next
+    # file's headers and lines be read as more of the first file.
+    diff = tmp_path / "overcount.diff"
+    diff.write_text(
+        "diff --git a/one.py b/one.py\n"
+        "--- a/one.py\n"
+        "+++ b/one.py\n"
+        "@@ -1,1 +1,6 @@\n"
+        " a\n"
+        "+b\n"
+        "diff --git a/two.py b/two.py\n"
+        "--- a/two.py\n"
+        "+++ b/two.py\n"
+        "@@ -1,1 +1,2 @@\n"
+        " x\n"
+        "+y\n"
+    )
+    findings = [_at("one.py", 2), _at("two.py", 2)]
+    result = run(findings, str(diff), tmp_path)
+    assert json.loads(result.stdout) == findings
