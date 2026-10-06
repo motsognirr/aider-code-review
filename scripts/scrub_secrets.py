@@ -15,7 +15,10 @@ def main():
     if len(sys.argv) < 2:
         print("usage: scrub_secrets.py <file>...", file=sys.stderr)
         sys.exit(64)
-    secrets = [v for v in (os.environ.get(k, "") for k in SECRET_VARS) if v]
+    # Longest first: if one value contains another, replacing the shorter one
+    # first would leave the remainder of the longer one in the text.
+    secrets = sorted((v for v in (os.environ.get(k, "") for k in SECRET_VARS) if v),
+                     key=len, reverse=True)
     for path in sys.argv[1:]:
         if not os.path.exists(path):
             continue  # nothing was written, so nothing can leak

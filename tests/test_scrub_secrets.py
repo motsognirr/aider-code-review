@@ -60,3 +60,11 @@ def test_missing_file_is_skipped(tmp_path):
     )
     assert proc.returncode == 0, proc.stderr
     assert present.read_text() == "[REDACTED]"
+
+
+def test_a_secret_containing_another_is_fully_redacted(tmp_path):
+    # Replacing the shorter value first would split the longer one into
+    # `[REDACTED]<rest>`, leaving the rest of it in the public comment.
+    overlap = {"DEEPSEEK_API_KEY": "abc", "OPENAI_API_KEY": "abc-def-ghi"}
+    (out,) = scrub(tmp_path, ["key: abc-def-ghi"], env_secrets=overlap)
+    assert out == "key: [REDACTED]"
